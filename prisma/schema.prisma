@@ -1,15 +1,63 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client-js"
+  previewFeatures = ["dataProxy"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// Enum for user roles
+enum Role {
+  CARE_WORKER
+  MANAGER
+}
+
+model Organization {
+  id              String  @id @default(cuid())
+  name            String
+  latitude        Float
+  longitude       Float
+  perimeterRadius Float   // The radius in kilometers
+
+  // An organization can have many users
+  users           User[]
+}
+
+model User {
+  id        String   @id @default(cuid())
+  auth0Id   String   @unique // The unique ID from Auth0
+  email     String   @unique
+  role      Role     @default(CARE_WORKER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Every user must belong to one organization
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+
+  // A user can have many shifts
+  shifts    Shift[]
+}
+
+model Shift {
+  id                  String    @id @default(cuid())
+  clockIn             DateTime
+  clockOut            DateTime? // Optional, as it's null until they clock out
+  clockInNote         String?
+  clockOutNote        String?
+  clockInLatitude     Float?
+  clockInLongitude    Float?
+  clockOutLatitude    Float?
+  clockOutLongitude   Float?
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  createdAt DateTime @default(now())
 }

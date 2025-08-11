@@ -1,95 +1,92 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
 
-export default function Home() {
+import { useAppContext } from '@/components/AppProvider';
+import { Button, Typography, Space, Spin, Modal } from 'antd';
+import { LogoutOutlined, ExclamationCircleFilled } from '@ant-design/icons';
+import Link from 'next/link';
+
+const { Title, Paragraph } = Typography;
+const { confirm } = Modal;
+
+export default function HomePage() {
+  const { user, isLoading } = useAppContext();
+
+  const getDashboardLink = () => {
+    if (user && user.role === 'MANAGER') {
+      return '/manager';
+    }
+    return '/dashboard';
+  };
+
+  // Function to show the logout confirmation modal
+  const showLogoutConfirm = () => {
+    confirm({
+      title: 'Are you sure you want to log out?',
+      icon: <ExclamationCircleFilled />,
+      okText: 'Yes, Log Out',
+      okType: 'danger',
+      cancelText: 'No',
+      onOk() {
+        window.location.href = '/api/auth/logout';
+      },
+    });
+  };
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div style={{
+      minHeight: '100vh',
+      width: '100%',
+      backgroundColor: '#f0f2f5',
+      backgroundImage: 'radial-gradient(circle,rgba(0, 175, 170, 1) 29%, rgba(29, 147, 141, 1) 84%)',
+      backgroundAttachment: 'fixed',
+      padding: '40px',
+      boxSizing: 'border-box'
+    }}>
+      <div style={{
+        background: 'rgba(255, 255, 255, 0.9)',
+        padding: '40px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+        maxWidth: '600px',
+        margin: '10% auto',
+        textAlign: 'center'
+      }}>
+        <Space direction="vertical" size="large">
+          <img
+            src="https://home.lief.care/wp-content/uploads/2023/05/lief-main-logo.svg"
+            alt="Lief Care"
+            style={{ 
+              width: '72px', 
+              height: '72px', 
+              margin: '0 auto' // Center the image
+            }}
+          />
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <Title>Lief Shift Tracker</Title>
+          <Paragraph>Welcome to the simple and efficient way to track your work shifts.</Paragraph>
+
+          {isLoading && <Spin />}
+
+          {!isLoading && !user && (
+            <Button type="primary" size="large" href="/api/auth/login">
+              Log In or Sign Up
+            </Button>
+          )}
+
+          {!isLoading && user && (
+            <Space>
+              <Link href={getDashboardLink()}>
+                <Button type="primary" size="large">
+                  Go to Your Dashboard
+                </Button>
+              </Link>
+              <Button size="large" icon={<LogoutOutlined />} onClick={showLogoutConfirm}>
+                Log Out
+              </Button>
+            </Space>
+          )}
+        </Space>
+      </div>
     </div>
   );
 }
