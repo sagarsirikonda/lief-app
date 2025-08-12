@@ -48,12 +48,14 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     myCurrentShift: async (_parent: any, _args: any, context: any) => {
+      if (!context.user) throw new Error("Unauthorized: You must be logged in.");
       if (!context.user) return null;
       const activeShift = await prisma.shift.findFirst({ where: { userId: context.user.id, clockOut: null }, orderBy: { clockIn: 'desc' } });
       if (!activeShift) return null;
       return { ...activeShift, clockIn: activeShift.clockIn.toISOString(), clockOut: activeShift.clockOut?.toISOString() };
     },
     myUser: async (_parent: any, _args: any, context: any) => {
+      if (!context.user) throw new Error("Unauthorized: You must be logged in.");
       if (!context.user) return null;
       return context.user;
     },
@@ -192,7 +194,7 @@ const resolvers = {
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
-const handler = withApiAuthRequired(startServerAndCreateNextHandler(server, {
+const handler = startServerAndCreateNextHandler<NextRequest>(server, {
   context: async (req: NextRequest) => {
     try {
       const session = await getSession(req, {} as any);
@@ -233,6 +235,6 @@ const handler = withApiAuthRequired(startServerAndCreateNextHandler(server, {
       throw new Error("An internal server error occurred during authentication.");
     }
   },
-}));
+});
 
 export { handler as GET, handler as POST };
