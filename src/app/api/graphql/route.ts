@@ -192,8 +192,8 @@ const resolvers = {
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
-const handler = withApiAuthRequired(startServerAndCreateNextHandler(server, {
-  context: async (req: NextRequest) => {
+const handler = startServerAndCreateNextHandler<NextRequest>(server, {
+  context: async (req) => {
     try {
       const session = await getSession(req, {} as any);
       if (!session || !session.user) {
@@ -233,6 +233,7 @@ const handler = withApiAuthRequired(startServerAndCreateNextHandler(server, {
       throw new Error("An internal server error occurred during authentication.");
     }
   },
-}));
+});
 
-export { handler as GET, handler as POST };
+const protectedHandler = withApiAuthRequired(handler as any);
+export { protectedHandler as GET, protectedHandler as POST };
