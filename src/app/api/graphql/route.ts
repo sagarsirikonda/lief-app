@@ -192,48 +192,52 @@ const resolvers = {
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
-const handler = startServerAndCreateNextHandler<NextRequest>(server, {
-  context: async (req) => {
-    try {
-      const session = await getSession(req, {} as any);
-      if (!session || !session.user) {
-        console.log("No session found.");
-        return { user: null };
-      }
-
-      const auth0User = session.user;
-      if (!auth0User.sub) throw new Error("Auth0 session is missing the user ID (sub).");
-
-      let user = await prisma.user.findUnique({ where: { auth0Id: auth0User.sub } });
-
-      if (!user) {
-        console.log(`No user found for auth0Id: ${auth0User.sub}. Creating new user.`);
-        const defaultOrg = await prisma.organization.findFirst();
-        if (!defaultOrg) {
-          console.log("No organizations found. Creating a new one.");
-          const newOrg = await prisma.organization.create({
-            data: { name: `${auth0User.name || 'My'} Organization`, latitude: 0, longitude: 0, perimeterRadius: 2 },
-          });
-          console.log(`New organization created with ID: ${newOrg.id}`);
-          user = await prisma.user.create({
-            data: { auth0Id: auth0User.sub, email: auth0User.email || `${auth0User.sub}@example.com`, role: 'MANAGER', organizationId: newOrg.id },
-          });
-          console.log(`New MANAGER user created with ID: ${user.id}`);
-        } else {
-          console.log(`Assigning new user to existing organization ID: ${defaultOrg.id}`);
-          user = await prisma.user.create({
-            data: { auth0Id: auth0User.sub, email: auth0User.email || `${auth0User.sub}@example.com`, role: 'CARE_WORKER', organizationId: defaultOrg.id },
-          });
-          console.log(`New CARE_WORKER user created with ID: ${user.id}`);
+const handler = withApiAuthRequired(async function (req: NextRequest) {
+  // The `startServerAndCreateNextHandler` is now called inside the protected route.
+  return startServerAndCreateNextHandler(server, {
+    context: async () => {
+      try {
+        // We get the session inside the context, which is the correct pattern
+        const session = await getSession();
+        if (!session || !session.user) {
+          console.log("No session found.");
+          return { user: null };
         }
+
+        const auth0User = session.user;
+        if (!auth0User.sub) throw new Error("Auth0 session is missing the user ID (sub).");
+
+        let user = await prisma.user.findUnique({ where: { auth0Id: auth0User.sub } });
+
+        if (!user) {
+          console.log(`No user found for auth0Id: ${auth0User.sub}. Creating new user.`);
+          const defaultOrg = await prisma.organization.findFirst();
+          if (!defaultOrg) {
+            console.log("No organizations found. Creating a new one.");
+            const newOrg = await prisma.organization.create({
+              data: { name: `${auth0User.name || 'My'} Organization`, latitude: 0, longitude: 0, perimeterRadius: 2 },
+            });
+            console.log(`New organization created with ID: ${newOrg.id}`);
+            user = await prisma.user.create({
+              data: { auth0Id: auth0User.sub, email: auth0User.email || `${auth0User.sub}@example.com`, role: 'MANAGER', organizationId: newOrg.id },
+            });
+            console.log(`New MANAGER user created with ID: ${user.id}`);
+          } else {
+            console.log(`Assigning new user to existing organization ID: ${defaultOrg.id}`);
+            user = await prisma.user.create({
+              data: { auth0Id: auth0User.sub, email: auth0User.email || `${auth0User.sub}@example.com`, role: 'CARE_WORKER', organizationId: defaultOrg.id },
+            });
+            console.log(`New CARE_WORKER user created with ID: ${user.id}`);
+          }
+        }
+        return { user };
+      } catch (error) {
+        console.error("CRITICAL ERROR in context creation:", error);
+        throw new Error("An internal server error occurred during authentication.");
       }
-      return { user };
-    } catch (error) {
-      console.error("CRITICAL ERROR in context creation:", error);
-      throw new Error("An internal server error occurred during authentication.");
-    }
-  },
+    },
+  })(req);
 });
 
-const protectedHandler = withApiAuthRequired(handler as any);
-export { protectedHandler as GET, protectedHandler as POST };
+// Export the single, correctly-typed handler for both GET and POST
+export { handler as GET, handler as POST };
