@@ -1,21 +1,17 @@
 // src/app/api/graphql/route.ts
-import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import { getSession } from '@auth0/nextjs-auth0';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { server } from '@/lib/apollo-server';
+import { server } from '@/lib/apollo-server'; // Import the server from our separate file
 
-// This handler is now simple and easy for Vercel to understand
-const handler = startServerAndCreateNextHandler<NextRequest>(server, {
-    context: async (req) => {
-        try {
-            const session = await getSession(req, {} as any);
-            if (!session || !session.user) {
-                return { user: null };
-            }
+// This is the new, simplified handler function
+async function handler(req: NextRequest) {
+    // 1. Get the user session first
+    let userContext = null;
+    try {
+        const session = await getSession();
+        if (session && session.user && session.user.sub) {
             const auth0User = session.user;
-            if (!auth0User.sub) return { user: null };
-
             let user = await prisma.user.findUnique({ where: { auth0Id: auth0User.sub } });
             if (!user) {
                 const defaultOrg = await prisma.organization.findFirst();
@@ -32,12 +28,35 @@ const handler = startServerAndCreateNextHandler<NextRequest>(server, {
                     });
                 }
             }
-            return { user };
-        } catch (error) {
-            console.error("Error in context creation:", error);
-            return { user: null };
+            userContext = { user };
         }
-    },
-});
+    } catch (error) {
+        console.error("CRITICAL ERROR in context creation:", error);
+        return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
+    }
+
+    // 2. Execute the GraphQL operation manually
+    const body = await req.json();
+    const response = await server.executeOperation(
+        {
+            query: body.query,
+            variables: body.variables,
+        },
+        {
+            contextValue: userContext,
+        }
+    );
+
+    // 3. Return the response, with a type check
+    if (response.body.kind === 'single') {
+        return new NextResponse(JSON.stringify(response.body.singleResult), {
+            headers: { 'Content-Type': 'application/json' },
+        });
+    } else {
+        // Handle the case of an incremental/streaming response if necessary
+        // For this app, we can just return an error.
+        return new NextResponse(JSON.stringify({ error: 'Unsupported response type' }), { status: 500 });
+    }
+}
 
 export { handler as GET, handler as POST };
