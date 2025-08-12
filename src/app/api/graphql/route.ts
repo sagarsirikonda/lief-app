@@ -4,6 +4,7 @@ import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import { PrismaClient, User as PrismaUser, Shift as PrismaShift } from '@prisma/client';
 import { withApiAuthRequired, getSession } from '@auth0/nextjs-auth0';
 import { gql } from 'graphql-tag';
+import { NextRequest } from 'next/server';
 
 const prisma = new PrismaClient();
 
@@ -192,7 +193,7 @@ const resolvers = {
 const server = new ApolloServer({ typeDefs, resolvers });
 
 const handler = withApiAuthRequired(startServerAndCreateNextHandler(server, {
-  context: async (req: any) => {
+  context: async (req: NextRequest) => {
     try {
       const session = await getSession(req, {} as any);
       if (!session || !session.user) {
