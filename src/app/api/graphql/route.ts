@@ -1,10 +1,10 @@
 // src/app/api/graphql/route.ts
 import { ApolloServer } from '@apollo/server';
-import { startServerAndCreateNextHandler } from '@as-integrations/next';
+// import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import { PrismaClient, User as PrismaUser, Shift as PrismaShift } from '@prisma/client';
-import { withApiAuthRequired, getSession } from '@auth0/nextjs-auth0';
+import { getSession } from '@auth0/nextjs-auth0';
 import { gql } from 'graphql-tag';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
 
@@ -194,47 +194,56 @@ const resolvers = {
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
-const handler = startServerAndCreateNextHandler<NextRequest>(server, {
-  context: async (req: NextRequest) => {
+async function handler(req: NextRequest) {
+    // 1. Get the user session first
+    let userContext = null;
     try {
-      const session = await getSession(req, {} as any);
-      if (!session || !session.user) {
-        console.log("No session found.");
-        return { user: null };
-      }
-
-      const auth0User = session.user;
-      if (!auth0User.sub) throw new Error("Auth0 session is missing the user ID (sub).");
-
-      let user = await prisma.user.findUnique({ where: { auth0Id: auth0User.sub } });
-
-      if (!user) {
-        console.log(`No user found for auth0Id: ${auth0User.sub}. Creating new user.`);
-        const defaultOrg = await prisma.organization.findFirst();
-        if (!defaultOrg) {
-          console.log("No organizations found. Creating a new one.");
-          const newOrg = await prisma.organization.create({
-            data: { name: `${auth0User.name || 'My'} Organization`, latitude: 0, longitude: 0, perimeterRadius: 2 },
-          });
-          console.log(`New organization created with ID: ${newOrg.id}`);
-          user = await prisma.user.create({
-            data: { auth0Id: auth0User.sub, email: auth0User.email || `${auth0User.sub}@example.com`, role: 'MANAGER', organizationId: newOrg.id },
-          });
-          console.log(`New MANAGER user created with ID: ${user.id}`);
-        } else {
-          console.log(`Assigning new user to existing organization ID: ${defaultOrg.id}`);
-          user = await prisma.user.create({
-            data: { auth0Id: auth0User.sub, email: auth0User.email || `${auth0User.sub}@example.com`, role: 'CARE_WORKER', organizationId: defaultOrg.id },
-          });
-          console.log(`New CARE_WORKER user created with ID: ${user.id}`);
+        const session = await getSession();
+        if (session && session.user && session.user.sub) {
+            const auth0User = session.user;
+            let user = await prisma.user.findUnique({ where: { auth0Id: auth0User.sub } });
+            if (!user) {
+                const defaultOrg = await prisma.organization.findFirst();
+                if (!defaultOrg) {
+                    const newOrg = await prisma.organization.create({
+                        data: { name: `${auth0User.name || 'My'} Organization`, latitude: 0, longitude: 0, perimeterRadius: 2 },
+                    });
+                    user = await prisma.user.create({
+                        data: { auth0Id: auth0User.sub, email: auth0User.email || `${auth0User.sub}@example.com`, role: 'MANAGER', organizationId: newOrg.id },
+                    });
+                } else {
+                    user = await prisma.user.create({
+                        data: { auth0Id: auth0User.sub, email: auth0User.email || `${auth0User.sub}@example.com`, role: 'CARE_WORKER', organizationId: defaultOrg.id },
+                    });
+                }
+            }
+            userContext = { user };
         }
-      }
-      return { user };
     } catch (error) {
-      console.error("CRITICAL ERROR in context creation:", error);
-      throw new Error("An internal server error occurred during authentication.");
+        console.error("CRITICAL ERROR in context creation:", error);
+        return new NextResponse(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
     }
-  },
-});
+
+    // 2. Execute the GraphQL operation manually
+    const body = await req.json();
+    const response = await server.executeOperation(
+        {
+            query: body.query,
+            variables: body.variables,
+        },
+        {
+            contextValue: userContext,
+        }
+    );
+
+    // 3. Return the response, with a type check
+    if (response.body.kind === 'single') {
+        return new NextResponse(JSON.stringify(response.body.singleResult), {
+            headers: { 'Content-Type': 'application/json' },
+        });
+    } else {
+        return new NextResponse(JSON.stringify({ error: 'Unsupported response type' }), { status: 500 });
+    }
+}
 
 export { handler as GET, handler as POST };

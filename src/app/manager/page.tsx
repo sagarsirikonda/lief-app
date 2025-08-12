@@ -271,11 +271,35 @@ const handleSaveLocation = async (values: { coordinates: string; perimeterRadius
               <Row gutter={24}>
                 <Col xs={24} lg={12}>
                     <Title level={5} style={{textAlign: 'center'}}>Daily Clock-In Trends</Title>
-                    <Line data={lineChartData} options={{ responsive: true, plugins: { legend: { display: false } } }} />
+                    <Line data={lineChartData} options={{
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                          y: {
+                            ticks: {
+                              stepSize: 1, // This forces the steps to be whole numbers
+                              precision: 0 // This ensures no decimal points are shown on the labels
+                            },
+                            beginAtZero: true
+                          }
+                        }
+                      }} />
                 </Col>
                 <Col xs={24} lg={12}>
                     <Title level={5} style={{textAlign: 'center'}}>Total Hours per Staff</Title>
-                    <Bar data={barChartData} options={{ responsive: true, plugins: { legend: { display: false } } }} />
+                    <Bar data={barChartData} options={{
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                          y: {
+                            ticks: {
+                              stepSize: 1, // This forces the steps to be whole numbers
+                              precision: 0 // This ensures no decimal points are shown on the labels
+                            },
+                            beginAtZero: true
+                          }
+                        }
+                      }} />
                 </Col>
               </Row>
 
