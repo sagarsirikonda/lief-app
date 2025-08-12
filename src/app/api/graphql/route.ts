@@ -1,12 +1,12 @@
 // src/app/api/graphql/route.ts
 import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
-import { PrismaClient, User as PrismaUser, Shift as PrismaShift } from '@prisma/client';
-import { withApiAuthRequired, getSession } from '@auth0/nextjs-auth0';
+import { User as PrismaUser, Shift as PrismaShift } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
+import { getSession } from '@auth0/nextjs-auth0';
 import { NextRequest } from 'next/server';
 import { gql } from 'graphql-tag';
 
-const prisma = new PrismaClient();
 
 // Helper function to calculate distance between two lat/lon points in km
 function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
