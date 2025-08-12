@@ -119,4 +119,4 @@ To run this project locally, follow these steps:
 
     npm run dev
 
-The application will be available at http://localhost:3000.
+The application will be available at https://lief-shifts-app.vercel.app.
