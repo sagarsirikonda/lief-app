@@ -48,13 +48,13 @@ const typeDefs = gql`
 const resolvers = {
   Query: {
     myCurrentShift: async (_parent: any, _args: any, context: any) => {
-      if (!context.user) return null;
+      if (!context.user) throw new Error("Unauthorized: You must be logged in.");
       const activeShift = await prisma.shift.findFirst({ where: { userId: context.user.id, clockOut: null }, orderBy: { clockIn: 'desc' } });
       if (!activeShift) return null;
       return { ...activeShift, clockIn: activeShift.clockIn.toISOString(), clockOut: activeShift.clockOut?.toISOString() };
     },
     myUser: async (_parent: any, _args: any, context: any) => {
-      if (!context.user) return null;
+      if (!context.user) throw new Error("Unauthorized: You must be logged in.");;
       return context.user;
     },
     organizationUsers: async (_parent: any, _args: any, context: any) => {
@@ -192,22 +192,17 @@ const resolvers = {
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
-const handler = withApiAuthRequired(async function (req: NextRequest) {
-  // The `startServerAndCreateNextHandler` is now called inside the protected route.
-  return startServerAndCreateNextHandler(server, {
-    context: async () => {
-      try {
-        // We get the session inside the context, which is the correct pattern
-        const session = await getSession();
-        if (!session || !session.user) {
-          console.log("No session found.");
-          return { user: null };
-        }
+const handler = startServerAndCreateNextHandler<NextRequest>(server, {
+  context: async (req) => {
+    try {
+      const session = await getSession(req, {} as any);
+      if (!session || !session.user) {
+        return { user: null };
+      }
+      const auth0User = session.user;
+      if (!auth0User.sub) return { user: null };
 
-        const auth0User = session.user;
-        if (!auth0User.sub) throw new Error("Auth0 session is missing the user ID (sub).");
-
-        let user = await prisma.user.findUnique({ where: { auth0Id: auth0User.sub } });
+      let user = await prisma.user.findUnique({ where: { auth0Id: auth0User.sub } });
 
         if (!user) {
           console.log(`No user found for auth0Id: ${auth0User.sub}. Creating new user.`);
@@ -236,8 +231,6 @@ const handler = withApiAuthRequired(async function (req: NextRequest) {
         throw new Error("An internal server error occurred during authentication.");
       }
     },
-  })(req);
 });
 
-// Export the single, correctly-typed handler for both GET and POST
 export { handler as GET, handler as POST };
