@@ -197,18 +197,18 @@ const handleSaveLocation = async (values: { coordinates: string; perimeterRadius
   ];
   // Define columns for the users table
   const userColumns: TableProps<User>['columns'] = [
-    { title: 'Email', dataIndex: 'email', key: 'email' },
-    { title: 'Role', dataIndex: 'role', key: 'role' },
-    { title: 'Action', key: 'action', render: (_, record) => (<Button onClick={() => { setSelectedUser(record); fetchShifts(record.id); }}>View Shifts</Button>),},
-  ];
+  { title: 'Email', dataIndex: 'email', key: 'email', fixed: 'left', width: 250 },
+  { title: 'Role', dataIndex: 'role', key: 'role', width: 150 },
+  { title: 'Action', key: 'action', render: (_, record) => (<Button onClick={() => { setSelectedUser(record); fetchShifts(record.id); }}>View Shifts</Button>), fixed: 'right', width: 120 },
+];
 
   // Define columns for the shifts table
   const shiftColumns: TableProps<Shift>['columns'] = [
-    { title: 'Clock In', dataIndex: 'clockIn', key: 'clockIn', render: (text) => new Date(text).toLocaleString() },
-    { title: 'Clock Out', dataIndex: 'clockOut', key: 'clockOut', render: (text) => text ? new Date(text).toLocaleString() : 'Active' },
-    { title: 'Clock-In Note', dataIndex: 'clockInNote', key: 'clockInNote' },
-    { title: 'Clock-Out Note', dataIndex: 'clockOutNote', key: 'clockOutNote' },
-  ];
+  { title: 'Clock In', dataIndex: 'clockIn', key: 'clockIn', render: (text) => new Date(text).toLocaleString(), width: 200 },
+  { title: 'Clock Out', dataIndex: 'clockOut', key: 'clockOut', render: (text) => text ? new Date(text).toLocaleString() : 'Active', width: 200 },
+  { title: 'Clock-In Note', dataIndex: 'clockInNote', key: 'clockInNote', width: 250 },
+  { title: 'Clock-Out Note', dataIndex: 'clockOutNote', key: 'clockOutNote', width: 250 },
+];
 
   // Configure the data for the bar chart
   const chartData = {
@@ -268,40 +268,40 @@ const handleSaveLocation = async (values: { coordinates: string; perimeterRadius
             {apiMessage && <Alert message={apiMessage.text} type={apiMessage.type} showIcon closable onClose={() => setApiMessage(null)} />}
             
             <Title level={4}>Weekly Analytics</Title>
-              <Row gutter={24}>
-                <Col xs={24} lg={12}>
-                    <Title level={5} style={{textAlign: 'center'}}>Daily Clock-In Trends</Title>
-                    <Line data={lineChartData} options={{
-                        responsive: true,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                          y: {
-                            ticks: {
-                              stepSize: 1, // This forces the steps to be whole numbers
-                              precision: 0 // This ensures no decimal points are shown on the labels
-                            },
-                            beginAtZero: true
-                          }
-                        }
-                      }} />
-                </Col>
-                <Col xs={24} lg={12}>
-                    <Title level={5} style={{textAlign: 'center'}}>Total Hours per Staff</Title>
-                    <Bar data={barChartData} options={{
-                        responsive: true,
-                        plugins: { legend: { display: false } },
-                        scales: {
-                          y: {
-                            ticks: {
-                              stepSize: 1, // This forces the steps to be whole numbers
-                              precision: 0 // This ensures no decimal points are shown on the labels
-                            },
-                            beginAtZero: true
-                          }
-                        }
-                      }} />
-                </Col>
-              </Row>
+            <Row gutter={[16, 24]}>
+              <Col xs={24} lg={12}>
+                <Title level={5} style={{textAlign: 'center'}}>Daily Clock-In Trends</Title>
+                <Line data={lineChartData} options={{
+                  responsive: true,
+                  plugins: { legend: { display: false } },
+                  scales: {
+                    y: {
+                      ticks: {
+                        stepSize: 1, // This forces the steps to be whole numbers
+                        precision: 0 // This ensures no decimal points are shown
+                      },
+                      beginAtZero: true
+                    }
+                  }
+                }} />
+              </Col>
+              <Col xs={24} lg={12}>
+                <Title level={5} style={{textAlign: 'center'}}>Total Hours per Staff</Title>
+                <Bar data={barChartData} options={{
+                  responsive: true,
+                  plugins: { legend: { display: false } },
+                  scales: {
+                    y: {
+                      ticks: {
+                        stepSize: 1, // This forces the steps to be whole numbers
+                        precision: 0 // This ensures no decimal points are shown
+                      },
+                      beginAtZero: true
+                    }
+                  }
+                }} />
+              </Col>
+            </Row>
 
             <Divider />
 
