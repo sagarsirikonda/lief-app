@@ -192,9 +192,9 @@ const handleSaveLocation = async (values: { coordinates: string; perimeterRadius
   }, [user]);
 
   const activeStaffColumns: TableProps<User>['columns'] = [
-    { title: 'Email', dataIndex: 'email', key: 'email' },
-    { title: 'Role', dataIndex: 'role', key: 'role' },
-  ];
+  { title: 'Email', dataIndex: 'email', key: 'email', fixed: 'left', width: 250 },
+  { title: 'Role', dataIndex: 'role', key: 'role', width: 150 },
+];
   // Define columns for the users table
   const userColumns: TableProps<User>['columns'] = [
   { title: 'Email', dataIndex: 'email', key: 'email', fixed: 'left', width: 250 },
@@ -204,7 +204,7 @@ const handleSaveLocation = async (values: { coordinates: string; perimeterRadius
 
   // Define columns for the shifts table
   const shiftColumns: TableProps<Shift>['columns'] = [
-  { title: 'Clock In', dataIndex: 'clockIn', key: 'clockIn', render: (text) => new Date(text).toLocaleString(), width: 200 },
+  { title: 'Clock In', dataIndex: 'clockIn', key: 'clockIn', render: (text) => new Date(text).toLocaleString(), width: 200, fixed: 'left' },
   { title: 'Clock Out', dataIndex: 'clockOut', key: 'clockOut', render: (text) => text ? new Date(text).toLocaleString() : 'Active', width: 200 },
   { title: 'Clock-In Note', dataIndex: 'clockInNote', key: 'clockInNote', width: 250 },
   { title: 'Clock-Out Note', dataIndex: 'clockOutNote', key: 'clockOutNote', width: 250 },
@@ -311,13 +311,13 @@ const handleSaveLocation = async (values: { coordinates: string; perimeterRadius
             <Divider />
             
             <Title level={4}>All Staff & Shift History</Title>
-            <Table columns={userColumns} dataSource={users} rowKey="id" />
+            <Table columns={userColumns} dataSource={users} rowKey="id" scroll={{ x: 'max-content' }}/>
 
             {selectedUser && (
               <>
                 <Divider />
                 <Title level={4}>Shift History for {selectedUser.email}</Title>
-                <Table columns={shiftColumns} dataSource={shifts} rowKey="id" />
+                <Table columns={shiftColumns} dataSource={shifts} rowKey="id" scroll={{ x: 'max-content' }} />
               </>
             )}
 
