@@ -192,19 +192,19 @@ const handleSaveLocation = async (values: { coordinates: string; perimeterRadius
   }, [user]);
 
   const activeStaffColumns: TableProps<User>['columns'] = [
-  { title: 'Email', dataIndex: 'email', key: 'email', fixed: 'left', width: 250 },
+  { title: 'Email', dataIndex: 'email', key: 'email', width: 250 },
   { title: 'Role', dataIndex: 'role', key: 'role', width: 150 },
 ];
   // Define columns for the users table
   const userColumns: TableProps<User>['columns'] = [
-  { title: 'Email', dataIndex: 'email', key: 'email', fixed: 'left', width: 250 },
+  { title: 'Email', dataIndex: 'email', key: 'email', width: 250 },
   { title: 'Role', dataIndex: 'role', key: 'role', width: 150 },
   { title: 'Action', key: 'action', render: (_, record) => (<Button onClick={() => { setSelectedUser(record); fetchShifts(record.id); }}>View Shifts</Button>), fixed: 'right', width: 120 },
 ];
 
   // Define columns for the shifts table
   const shiftColumns: TableProps<Shift>['columns'] = [
-  { title: 'Clock In', dataIndex: 'clockIn', key: 'clockIn', render: (text) => new Date(text).toLocaleString(), width: 200, fixed: 'left' },
+  { title: 'Clock In', dataIndex: 'clockIn', key: 'clockIn', render: (text) => new Date(text).toLocaleString(), width: 200 },
   { title: 'Clock Out', dataIndex: 'clockOut', key: 'clockOut', render: (text) => text ? new Date(text).toLocaleString() : 'Active', width: 200 },
   { title: 'Clock-In Note', dataIndex: 'clockInNote', key: 'clockInNote', width: 250 },
   { title: 'Clock-Out Note', dataIndex: 'clockOutNote', key: 'clockOutNote', width: 250 },
@@ -306,7 +306,7 @@ const handleSaveLocation = async (values: { coordinates: string; perimeterRadius
             <Divider />
 
             <Title level={4}>Currently Clocked-In Staff</Title>
-            <Table columns={activeStaffColumns} dataSource={activeStaff} rowKey="id" />
+            <Table columns={activeStaffColumns} dataSource={activeStaff} rowKey="id" scroll={{ x: 'max-content' }} />
             
             <Divider />
             
