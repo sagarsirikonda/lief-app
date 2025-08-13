@@ -1,6 +1,4 @@
-// src/app/api/graphql/route.ts
 import { ApolloServer } from '@apollo/server';
-// import { startServerAndCreateNextHandler } from '@as-integrations/next';
 import { PrismaClient, User as PrismaUser, Shift as PrismaShift } from '@prisma/client';
 import { getSession } from '@auth0/nextjs-auth0';
 import { gql } from 'graphql-tag';
@@ -8,7 +6,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
 
-// Helper function to calculate distance between two lat/lon points in km
 function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // Radius of the Earth in km
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -90,7 +87,7 @@ const resolvers = {
         include: { user: true },
       });
 
-      // --- Staff Weekly Hours Calculation (Unchanged) ---
+      // --- Staff Weekly Hours Calculation ---
       const completedShifts = shifts.filter(s => s.clockOut);
       type ShiftWithUser = PrismaShift & { user: PrismaUser };
       const hoursByUser = completedShifts.reduce((acc: Record<string, number>, shift: ShiftWithUser) => {
@@ -102,10 +99,9 @@ const resolvers = {
       }, {});
       const staffWeeklyHours = Object.entries(hoursByUser).map(([email, totalHours]) => ({ email, totalHours: parseFloat((totalHours as number).toFixed(2)) }));
 
-      // --- Daily Stats Calculation (Updated Logic) ---
+      // --- Daily Stats Calculation ---
       const dailyStatsMap: Map<string, { totalHours: number, count: number }> = new Map();
       
-      // Initialize the map with the last 7 days to ensure a full week of data
       for (let i = 0; i < 7; i++) {
         const d = new Date();
         d.setDate(d.getDate() - i);
@@ -136,8 +132,6 @@ const resolvers = {
       if (!context.user || context.user.role !== 'MANAGER') {
         throw new Error("Unauthorized");
       }
-      // This is an efficient query to find users who have at least one shift
-      // that has not been clocked out of yet.
       return prisma.user.findMany({
         where: {
           organizationId: context.user.organizationId,

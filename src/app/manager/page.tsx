@@ -137,10 +137,7 @@ const parseCoordinates = (coordString: string): { latitude: number; longitude: n
 };
 
   // Handle saving the organization's location settings
-  // Updated save location handler
 const handleSaveLocation = async (values: { coordinates: string; perimeterRadius: number; }) => {
-  // We no longer need the apiMessage state for this form
-  // setApiMessage(null); 
   const parsed = parseCoordinates(values.coordinates);
 
   if (!parsed) {
@@ -167,14 +164,12 @@ const handleSaveLocation = async (values: { coordinates: string; perimeterRadius
     const result = await response.json();
     if (result.errors) throw new Error(result.errors[0].message);
     
-    // This is the new success dialog box
     Modal.success({
       title: 'Settings Updated Successfully',
       content: `The organization's location has been saved. New coordinates: Latitude ${parsed.latitude.toFixed(4)}, Longitude ${parsed.longitude.toFixed(4)}.`,
     });
 
   } catch (error: any) {
-    // This is the new error dialog box
     Modal.error({
       title: 'Update Failed',
       content: `An error occurred: ${error.message}`,
@@ -182,13 +177,11 @@ const handleSaveLocation = async (values: { coordinates: string; perimeterRadius
   }
 };
 
-  // This is the corrected useEffect hook
   useEffect(() => {
     // Only fetch data if the user has loaded and is a manager
     if (user && user.role === 'MANAGER') {
       fetchData();
     }
-  // The dependency array now uses stable values
   }, [user]);
 
   const activeStaffColumns: TableProps<User>['columns'] = [
@@ -243,8 +236,7 @@ const handleSaveLocation = async (values: { coordinates: string; perimeterRadius
 
   if (isUserLoading || (user && isDataLoading)) return <div style={{ padding: '20px', textAlign: 'center' }}><Spin size="large" /></div>;
   
-  // We need to check the role from the user object provided by our API, not Auth0's
-  // @ts-ignore
+  
   if (user && user.role !== 'MANAGER') return <Layout style={{ padding: '40px' }}><Alert message="Access Denied" /></Layout>;
 
   // Show a loading spinner while the manager-specific data is being fetched
@@ -329,7 +321,6 @@ const handleSaveLocation = async (values: { coordinates: string; perimeterRadius
                 name="coordinates"
                 label="Center Coordinates"
                 rules={[{ required: true, message: 'Please input coordinates!' }]}
-                // The paragraph is now passed as the 'extra' prop
                 extra="Enter coordinates in decimal format (latitude, longitude) or Degrees-Minutes-Seconds (DMS) format."
               >
                 <Input placeholder="e.g., 17.5868, 78.0736 or 17°35'12.7 N 78°04'25.0 E" />

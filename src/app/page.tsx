@@ -33,14 +33,13 @@ export default function HomePage() {
   };
 
   return (
-    // This parent div now uses flexbox to center its child
     <div style={{
       minHeight: '100vh',
       width: '100%',
       backgroundColor: '#f0f2f5',
       backgroundImage: 'radial-gradient(circle,rgba(0, 175, 170, 1) 29%, rgba(29, 147, 141, 1) 84%)',
       backgroundAttachment: 'fixed',
-      padding: '20px', // Adjusted padding for mobile
+      padding: '20px',
       boxSizing: 'border-box',
       display: 'flex',
       alignItems: 'center',
@@ -52,7 +51,7 @@ export default function HomePage() {
         borderRadius: '8px',
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
         maxWidth: '600px',
-        width: '100%', // Ensure it takes up available width on small screens
+        width: '100%',
         textAlign: 'center'
       }}>
         <Space direction="vertical" size="large">

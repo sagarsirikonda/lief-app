@@ -55,7 +55,6 @@ export default function DashboardPage() {
     }
   }, [user]);
 
-  // This is the updated handleClockIn function
   const handleClockIn = async () => {
     setIsSubmitting(true);
     setApiMessage(null);

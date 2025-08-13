@@ -5,12 +5,12 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f0f2f5; /* A soft, professional background color */
+  background-color: #f0f2f5;
 }
 
 
 .ant-btn-primary {
-  background-color: #1890ff; /* A vibrant blue */
+  background-color: #1890ff;
   border-color: #1890ff;
 }
 
@@ -19,9 +19,8 @@ body {
   border-color: #40a9ff;
 }
 
-/* Add some subtle styling to the layout content */
 .ant-layout-content {
-  background: #fafafa; /* This is a softer, off-white */
+  background: #fafafa;
   padding: 24px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09);

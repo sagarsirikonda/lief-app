@@ -1,4 +1,3 @@
-// src/components/AppProvider.tsx
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -26,14 +25,12 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const fetchAppUser = async () => {
-      // If there's an Auth0 error, we can't proceed.
       if (auth0Error) {
         setError(auth0Error);
         setIsLoading(false);
         return;
       }
       
-      // If Auth0 is done loading and we have a logged-in user...
       if (auth0User) {
         try {
           // Fetch our user profile from our own database.
@@ -51,15 +48,12 @@ export const AppProvider = ({ children }: { children: React.ReactNode }) => {
           if (result.data?.myUser) {
             setAppUser(result.data.myUser);
           } else {
-            // This can happen during the race condition. We'll retry.
-            // A simple reload is a robust way to handle this for the user.
             window.location.reload();
           }
         } catch (e: any) {
           setError(e);
         }
       }
-      // If we're done loading and there's no user, we're done.
       setIsLoading(false);
     };
 
